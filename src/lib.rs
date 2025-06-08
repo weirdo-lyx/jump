@@ -6,14 +6,20 @@ use crate::player::*;
 use crate::ui::*;
 use bevy::prelude::*;
 use bevy_hanabi::prelude::*;
+use wasm_bindgen::prelude::*;
 
 mod camera;
 mod platform;
 mod player;
 mod ui;
 
-fn main() {
+#[cfg(target_arch = "wasm32")]
+use bevy::wasm::run;
+
+#[wasm_bindgen(start)]
+pub fn start_game() {
     let mut app = App::new();
+
     app.add_plugins(DefaultPlugins);
 
     #[cfg(not(target_arch = "wasm32"))]
@@ -85,7 +91,7 @@ fn main() {
                 sync_score_up_effect,
                 shift_score_up_effect,
             )
-                .run_if(in_state(GameState::Playing)),
+            .run_if(in_state(GameState::Playing)),
         )
         // GameOver
         .add_systems(OnEnter(GameState::GameOver), (setup_game_over_menu,))
@@ -103,5 +109,14 @@ fn main() {
         app.add_systems(Update, animate_accumulation_particle_effect);
     }
 
-    app.run();
+    // 启动游戏
+    #[cfg(target_arch = "wasm32")]
+    {
+        run(app);
+    }
+
+    #[cfg(not(target_arch = "wasm32"))]
+    {
+        app.run();
+    }
 }
